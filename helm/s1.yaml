@@ -1,0 +1,78 @@
+
+---
+
+## pod deployment
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: service-1
+  name: service-1
+  namespace: poc
+spec:
+  containers:
+  - image: dilshad007/service-1:0.0.1-SNAPSHOT
+    name: service-1
+    ports:
+     - containerPort: 8080
+       name: http-1
+    envFrom:
+    - configMapRef:
+        name: cm-1
+    volumeMounts:
+      - name: config-volume
+        mountPath: /app/config/
+        readOnly: false  
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "200m"
+  volumes:
+  - name: config-volume
+    configMap:
+      name: cm-2
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+
+
+---
+## configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-1
+data:
+  # property-like keys; each key maps to a simple value
+  SERVER_PORT: 8080
+  SPRING_CONFIG_IMPORT: "configtree:/app/config/"
+  SERVICE2_URL: https://service2:443/service2/hello
+  JAVAX_LOG_LEVEL: TRACE
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-2
+data:
+    dummy.key: dummy.value
+
+---
+## service-1
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service1
+spec:
+  selector:
+    app.kubernetes.io/name: service-1
+  ports:
+  - name: http-1
+    protocol: TCP
+    port: 80
+    targetPort: http-1

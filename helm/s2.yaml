@@ -1,0 +1,97 @@
+
+---
+
+## pod deployment
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: service-2
+  name: service-2
+  namespace: poc
+spec:
+  containers:
+  - image: dilshad007/service-2:0.0.1-SNAPSHOT
+    name: service-2
+    ports:
+     - containerPort: 8081
+       name: https-2
+    envFrom:
+    - configMapRef:
+        name: cm-1
+    volumeMounts:
+      - name: config-volume
+        mountPath: /app/config/
+        readOnly: false  
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "200m"
+  volumes:
+  - name: config-volume
+    configMap:
+      name: cm-2
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+
+
+---
+## configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-1
+data:
+  # property-like keys; each key maps to a simple value
+  SERVER_PORT: 443
+  SPRING_CONFIG_IMPORT: "configtree:/app/config/"
+  JAVAX_LOG_LEVEL: TRACE
+  
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-2
+data:
+    # mTLS
+    server.ssl.client-auth: need
+
+    # enable/disable https
+    server.ssl.enabled: true
+
+    # keystore format
+    server.ssl.key-store-type: PKCS12
+
+    # keystore location
+    server.ssl.key-store: /app/truststore/keystore.p12
+
+    # keystore password
+    server.ssl.key-store-password: changeit
+
+    # SSL protocol to use
+    server.ssl.protocol: TLS
+
+    # Enabled SSL protocols
+    server.ssl.enabled-protocols: TLSv1.2
+
+---
+## service-2
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service2
+spec:
+  selector:
+    app.kubernetes.io/name: service-2
+  ports:
+  - name: https-2
+    protocol: TCP
+    port: 443
+    targetPort: https-2
