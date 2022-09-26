@@ -16,11 +16,11 @@ spec:
   - image: dilshad007/service-1:0.0.1-SNAPSHOT
     name: service-1
     ports:
-     - containerPort: 8080
-       name: http-1
+     - containerPort: 443
+       name: https-1
     envFrom:
     - configMapRef:
-        name: cm-1
+        name: service-1-cm-1
     volumeMounts:
       - name: config-volume
         mountPath: /app/config/
@@ -35,7 +35,7 @@ spec:
   volumes:
   - name: config-volume
     configMap:
-      name: cm-2
+      name: service-1-cm-2
   dnsPolicy: ClusterFirst
   restartPolicy: Always
 
@@ -45,21 +45,42 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cm-1
+  name: service-1-cm-1
 data:
   # property-like keys; each key maps to a simple value
-  SERVER_PORT: 8080
+  SERVER_PORT: 8443
   SPRING_CONFIG_IMPORT: "configtree:/app/config/"
   SERVICE2_URL: https://service2:443/service2/hello
   JAVAX_LOG_LEVEL: TRACE
 
 ---
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cm-2
+  name: service-1-cm-2
 data:
-    dummy.key: dummy.value
+  # mTLS
+  server.ssl.client-auth: need
+
+  # enable/disable https
+  server.ssl.enabled: true
+
+  # keystore format
+  server.ssl.key-store-type: PKCS12
+
+  # keystore location
+  server.ssl.key-store: /app/truststore/keystore.p12
+
+  # keystore password
+  server.ssl.key-store-password: changeit
+
+  # SSL protocol to use
+  server.ssl.protocol: TLS
+
+  # Enabled SSL protocols
+  server.ssl.enabled-protocols: TLSv1.2
+
 
 ---
 ## service-1
@@ -72,7 +93,7 @@ spec:
   selector:
     app.kubernetes.io/name: service-1
   ports:
-  - name: http-1
+  - name: https-1
     protocol: TCP
     port: 80
-    targetPort: http-1
+    targetPort: https-1

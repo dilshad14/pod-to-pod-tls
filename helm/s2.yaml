@@ -16,11 +16,11 @@ spec:
   - image: dilshad007/service-2:0.0.1-SNAPSHOT
     name: service-2
     ports:
-     - containerPort: 8081
+     - containerPort: 443
        name: https-2
     envFrom:
     - configMapRef:
-        name: cm-1
+        name: service-2-cm-1
     volumeMounts:
       - name: config-volume
         mountPath: /app/config/
@@ -35,7 +35,7 @@ spec:
   volumes:
   - name: config-volume
     configMap:
-      name: cm-2
+      name: service-2-cm-2
   dnsPolicy: ClusterFirst
   restartPolicy: Always
 
@@ -45,7 +45,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cm-1
+  name: service-2-cm-1
 data:
   # property-like keys; each key maps to a simple value
   SERVER_PORT: 443
@@ -57,7 +57,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cm-2
+  name: service-2-cm-2
 data:
     # mTLS
     server.ssl.client-auth: need
@@ -93,5 +93,5 @@ spec:
   ports:
   - name: https-2
     protocol: TCP
-    port: 443
+    port: 81
     targetPort: https-2
