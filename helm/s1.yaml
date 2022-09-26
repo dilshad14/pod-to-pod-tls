@@ -95,5 +95,5 @@ spec:
   ports:
   - name: https-1
     protocol: TCP
-    port: 80
+    port: 443
     targetPort: https-1
