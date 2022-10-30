@@ -1,0 +1,9 @@
+apiVersion: cert-manager.skyscanner.net/v1alpha1
+kind: KMSIssuer
+metadata:
+  name: kms-issuer
+  namespace: kms-issuer-poc
+spec:
+  keyId: alias/certificate-key-alias # same name as AWS kms key
+  commonName: SELF CREATED ROOT CA      # The common name for the root certificate
+  duration: 87600h # 10 years
